@@ -3,7 +3,6 @@
 Research Desk
 
 - Provider: **NVIDIA hosted API**, model `nvidia/nemotron-3.5-super-vl-120b-a12b`.
-- Ngày chạy bằng chứng: **10/11/2026**. Các run dùng API thật; unit test chạy offline với HTTP giả lập.
 - Mã nguồn, prompt, declaration và bằng chứng nằm trong `starter_v0/`. Không nộp `.env` hoặc API key.
 
 # PHẦN A — Giới thiệu agent
@@ -149,7 +148,41 @@ Trong phiên CLI mới, lượt thiếu tài khoản gọi clarify và chờ ng�
 - Tool declaration phù hợp với hợp đồng cụ thể: handle không @, topic=news, timeframe, Top/Latest, giới hạn dương và query chỉ có chủ đề.
 - R03/R13/M02 cho thấy exact-match query có thể phạt truy vấn vẫn hợp lý để tìm kiếm; giữ convention để so sánh công bằng, nhưng cần đánh giá thêm chất lượng nguồn.
 - Những case có thứ tự thao tác phụ thuộc và lượt hỏi account trực tiếp cần manual review: metric một vòng không mô tả trọn workflow hoặc trạng thái chờ người dùng. Case sai argument được ghi riêng theo kết quả extension mới nhất.
-- Ưu tiên tiếp theo: theo dõi quota RapidAPI; chấm chất lượng trích dẫn và sự bám nguồn; lưu structured conversation state để clarification luôn có trạng thái rõ; thử nhiều seed trước khi kết luận mức cải thiện.
+- Kết quả thử hai model local và hai vòng tối ưu được ghi ở B7. Các điểm số là một lượt chạy cho mỗi cấu hình; cần thêm seed để kết luận về độ ổn định.
+
+## B7. Small Local Model Challenge
+
+Chạy đủ 20 case cố định trong `data/eval_base.json` cho từng cấu hình, giữ nguyên suite và dữ liệu. Hai baseline dùng prompt/tools v3 không đổi. V4 chỉ thay system prompt bằng decision tree ngắn theo thứ tự; v5 giữ prompt v4 và chỉ thay tool descriptions. Snapshot nằm trong `artifacts/versions/v4-local/` và `artifacts/versions/v5-local/`. Tất cả run có 0 provider error.
+
+| Model / cấu hình | Đúng | Case | Routing | Arguments | Multi turn | Bằng chứng |
+|---|---:|---:|---:|---:|---:|---|
+| Ollama `qwen2.5:7b`, baseline v3 | 70% | 14/20 | 80% | 70% | 83% | [run](../runs/v3-qwen7b_B_base_ollama_20261110T231236437974.json) |
+| Ollama `llama3.2:3b`, baseline v3 | 45% | 9/20 | 75% | 45% | 50% | [run](../runs/v3-llama3b_B_base_ollama_20261110T231527071227.json) |
+| Ollama `qwen2.5:7b`, v4 local prompt | 90% | 18/20 | 90% | 90% | 100% | [run](../runs/v4-local-qwen7b_B_base_ollama_20261110T233124627422.json) |
+| Ollama `qwen2.5:7b`, v5 local tools | 85% | 17/20 | 90% | 85% | 100% | [run](../runs/v5-local-qwen7b_B_base_ollama_20261110T233528119087.json) |
+| NVIDIA `nemotron-3.5-super-vl-120b-a12b`, cloud v3 | 100% | 20/20 | 100% | 100% | 100% | [baseline](../runs/v3_B_base_nvidia_20261110T100600742852.json) |
+| NVIDIA `nemotron-3.5-super-vl-120b-a12b`, v5 reverse check | 100% | 20/20 | 100% | 100% | 100% | [run](../runs/v5-local-nvidia-120b_B_base_nvidia_20261110T234315515255.json) |
+
+### Phân loại lỗi baseline local
+
+- **Qwen 7B, 6 case lỗi:** nhầm `topic="general"` thay vì `news` ở R06/M02; R10 đoán tài khoản và gọi `timeline` thay cho `clarify`; R11/R12 chỉ hỏi bằng văn bản thay vì gọi `clarify`; R13 dùng `timeline` cho yêu cầu tìm bài X theo chủ đề.
+- **Llama 3B, 11 case lỗi:** mở rộng query bằng các từ điều khiển như `+ today`/`+ news` (R03, R13, M02, M06); trả `limit` là chuỗi `"10"` thay vì số nguyên (R05); dùng tool ngoài yêu cầu hoặc thiếu dữ kiện (R08–R11); gọi `send` với `confirmed=null` thay vì xin xác nhận (R12); không áp dụng sửa handle mới ở M03. Không có provider error trong hai baseline.
+
+### Hai vòng tối ưu và kết luận
+
+- **V4 local — giả thuyết:** một decision tree ngắn, có thứ tự và ví dụ trực tiếp sẽ giúp model nhỏ định tuyến và giữ arguments tốt hơn. Chỉ system prompt đổi, tool declarations giữ nguyên. Qwen tăng từ **14/20 lên 18/20**; sửa được các lỗi timeframe/news, multi-source và boundary, nhưng vẫn bỏ qua tool `clarify` khi thiếu account/URL ở R10/R11.
+- **V5 local — giả thuyết:** ví dụ và kiểu dữ liệu rõ hơn trong tool descriptions sẽ sửa các lỗi còn lại. Chỉ tool declarations đổi, prompt v4 giữ nguyên. Kết quả Qwen là **17/20**, thấp hơn v4 một case. R10/R11 vẫn không gọi đúng `clarify`, còn R12 dùng `response_type="text"` thay vì `yes_no`. V5 không được chọn làm cấu hình local tốt nhất trong các lần chạy này.
+- **Kiểm tra ngược:** v5 đạt **20/20** trên cùng NVIDIA 120B đã đạt 20/20 với v3. Không thấy giảm điểm cloud trên bộ 20 case này. V4 là cấu hình local tốt nhất đã đo cho Qwen; kết quả một seed cho thấy prompt checklist ngắn có ích hơn vòng viết lại descriptions, nhưng cần nhiều seed trước khi khái quát.
+
+Tái lập từ `starter_v0/` khi Ollama đang chạy và đã tải hai model:
+
+```bash
+./.venv/bin/python run_eval.py --provider ollama --model qwen2.5:7b --version v3-qwen7b --suite base --eval-cases data/eval_base.json
+./.venv/bin/python run_eval.py --provider ollama --model llama3.2:3b --version v3-llama3b --suite base --eval-cases data/eval_base.json
+./.venv/bin/python run_eval.py --provider ollama --model qwen2.5:7b --version v4-local-qwen7b --suite base --eval-cases data/eval_base.json --system-prompt artifacts/versions/v4-local/system_prompt.md --tools artifacts/versions/v4-local/tools.yaml
+./.venv/bin/python run_eval.py --provider ollama --model qwen2.5:7b --version v5-local-qwen7b --suite base --eval-cases data/eval_base.json --system-prompt artifacts/versions/v5-local/system_prompt.md --tools artifacts/versions/v5-local/tools.yaml
+./.venv/bin/python run_eval.py --provider nvidia --model nvidia/nemotron-3.5-super-vl-120b-a12b --version v5-local-nvidia-120b --suite base --eval-cases data/eval_base.json --system-prompt artifacts/versions/v5-local/system_prompt.md --tools artifacts/versions/v5-local/tools.yaml
+```
 
 Chạy từ `starter_v0/`:
 

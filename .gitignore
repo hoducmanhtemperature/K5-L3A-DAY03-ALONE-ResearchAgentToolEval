@@ -22,3 +22,7 @@ arxiv_papers/
 Thumbs.db
 .idea/
 .vscode/
+
+# Local Ollama runtime and model cache
+.ollama-runtime/
+.ollama-models/

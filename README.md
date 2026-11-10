@@ -91,7 +91,7 @@ Bonus:
 
 **Bonus (tuỳ chọn)**
 - [x] `send` có xác nhận trước khi gửi, có transcript chứng minh
-- [ ] Small Local Model Challenge (Step 7)
+- [x] Small Local Model Challenge (Step 7)
 
 ## Folder Map
 
