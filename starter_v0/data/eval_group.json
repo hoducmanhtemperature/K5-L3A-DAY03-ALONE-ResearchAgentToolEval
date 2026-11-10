@@ -1,7 +1,252 @@
 {
-  "dataset_id": "day04_v2_research_group",
+  "dataset_id": "day03_research_desk_group",
   "dataset_role": "group",
-  "description": "Case do NHÓM tự viết thêm để cover thêm trường hợp. Mỗi case cần: id, phase='B', query HOẶC turns, failure_type (thuộc allowed_failure_types), và expect (tool_calls[...] hoặc no_tool=true). Nên kèm metadata.what_it_tests.",
-  "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "description": "10 case độc lập: 5 single turn và 5 multi turn, gồm tool mới và boundary.",
+  "cases": [
+    {
+      "id": "G01_deduplicate_tracking",
+      "phase": "B",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "deduplicate",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Nguồn đã có và URL tracking → deduplicate, không search."
+      },
+      "query": "Bỏ nguồn trùng trong danh sách đã có này, không tìm thêm: [{\"title\": \"A\", \"url\": \"https://example.com/a?utm_source=x\"}, {\"title\": \"B\", \"url\": \"https://example.com/a\"}]"
+    },
+    {
+      "id": "G02_audit_missing_url",
+      "phase": "B",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "source_audit",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Kiểm tra đủ citation → source_audit; không tự bịa URL."
+      },
+      "query": "Kiểm tra danh sách nguồn sau có đủ title và URL để trích dẫn chưa, không tìm thêm: [{\"title\": \"A\"}, {\"title\": \"B\", \"url\": \"https://example.com/b\"}]"
+    },
+    {
+      "id": "G03_compare_existing",
+      "phase": "B",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "compare_sources",
+            "args": {}
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "So sánh nội dung được cung cấp → compare_sources; không suy diễn fact."
+      },
+      "query": "So sánh summary của hai nguồn đã có, không mở link: [{\"url\": \"https://a.example/a\", \"summary\": \"Release is available\"}, {\"url\": \"https://b.example/b\", \"summary\": \"Release is delayed\"}]"
+    },
+    {
+      "id": "G04_extract_links",
+      "phase": "B",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "extract_citations",
+            "args": {
+              "text": "Nguồn A https://example.com/a và nguồn B https://example.com/b"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Trích URL từ text có sẵn, không fetch."
+      },
+      "query": "Trích các URL duy nhất từ đoạn văn này, không truy cập link: \"Nguồn A https://example.com/a và nguồn B https://example.com/b\""
+    },
+    {
+      "id": "G05_article_without_url",
+      "phase": "B",
+      "failure_type": "missing_info",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "text"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Không có lịch sử/URL → hỏi lại; không đoán bài."
+      },
+      "query": "Đọc bài vừa nhắc và tóm tắt cho tôi."
+    },
+    {
+      "id": "G06_correct_account_count",
+      "phase": "B",
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "timeline",
+            "args": {
+              "screenname": "karpathy",
+              "limit": 2
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Giữ account và limit mới nhất, không chạy lại yêu cầu cũ."
+      },
+      "turns": [
+        {
+          "role": "user",
+          "content": "Lấy 8 tweet của @sama."
+        },
+        {
+          "role": "user",
+          "content": "Đổi sang @karpathy và chỉ 2 tweet."
+        },
+        {
+          "role": "user",
+          "content": "Giữ yêu cầu đã sửa nhé."
+        }
+      ]
+    },
+    {
+      "id": "G07_preserve_month",
+      "phase": "B",
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "lookup",
+            "args": {
+              "query": "robotics",
+              "topic": "news",
+              "timeframe": "month"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Đổi topic nhưng carry timeframe=month."
+      },
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tìm tin AI tháng này."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn giữ chủ đề AI hay thay đổi?"
+        },
+        {
+          "role": "user",
+          "content": "Đổi chủ đề thành robotics, giữ khoảng thời gian."
+        }
+      ]
+    },
+    {
+      "id": "G08_extract_context",
+      "phase": "B",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "extract_citations",
+            "args": {
+              "text": "Bản nháp: https://example.com/research"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Dùng văn bản ở lượt trước, không fetch URL."
+      },
+      "turns": [
+        {
+          "role": "user",
+          "content": "Bản nháp: https://example.com/research"
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn tôi xử lý bản nháp thế nào?"
+        },
+        {
+          "role": "user",
+          "content": "Chỉ trích URL từ nguyên văn bản nháp ở trên, không đọc trang."
+        }
+      ]
+    },
+    {
+      "id": "G09_declined_publication",
+      "phase": "B",
+      "failure_type": "wrong_boundary",
+      "expect": {
+        "no_tool": true
+      },
+      "metadata": {
+        "what_it_tests": "User từ chối → không gọi send hoặc tool khác."
+      },
+      "turns": [
+        {
+          "role": "user",
+          "content": "Gửi bản tin \"Bản nháp thử nghiệm\" lên Telegram."
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn xác nhận gửi bản nháp đó lên kênh Telegram đã cấu hình chứ?"
+        },
+        {
+          "role": "user",
+          "content": "Không, hủy gửi. Không cần thao tác thêm."
+        }
+      ]
+    },
+    {
+      "id": "G10_format_existing_items",
+      "phase": "B",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "format",
+            "args": {
+              "template": "thread"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Dùng item lịch sử → format thread, không search/send."
+      },
+      "turns": [
+        {
+          "role": "user",
+          "content": "Nguồn có sẵn: [{\"title\":\"Release note\",\"summary\":\"A release note\",\"url\":\"https://example.com/release\"}]"
+        },
+        {
+          "role": "assistant",
+          "content": "Bạn muốn định dạng thế nào?"
+        },
+        {
+          "role": "user",
+          "content": "Chuyển đúng nguồn đó thành thread, không tìm thêm và không gửi."
+        }
+      ]
+    }
+  ]
 }

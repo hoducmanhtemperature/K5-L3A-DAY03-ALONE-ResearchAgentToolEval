@@ -9,25 +9,21 @@ verify that your API key works — they are not routing hints. Run them from `st
 
 ## 1. Model Provider
 
-Recommended provider:
+Provider dùng cho bản hoàn thiện:
 
 ```bash
-OPENROUTER_API_KEY=...
+NVIDIA_API_KEY=...
+NVIDIA_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
+RESEARCH_UI_PASSWORD=...
 ```
 
-Alternatives:
-
-```bash
-OPENAI_API_KEY=...
-ANTHROPIC_API_KEY=...
-GEMINI_API_KEY=...
-```
+NVIDIA dùng OpenAI SDK với `base_url=https://integrate.api.nvidia.com/v1`, streaming và parallel tool calls. `.env` được gitignore; không đưa key vào code hoặc transcript.
 
 Preflight:
 
 ```bash
 cd starter_v0
-python scripts/preflight_provider.py --provider openrouter
+.venv/bin/python scripts/preflight_provider.py --provider nvidia
 ```
 
 Local model (bonus Small Local Model Challenge, không cần API key):
@@ -86,27 +82,36 @@ python -c "from tools import TOOL_FUNCTIONS as T; print(T['fetch']('https://open
 
 ## 4. RapidAPI Twitter API45 — `timeline`, `social_search`
 
-- API page: https://rapidapi.com/alexanderxbx/api/twitter-api45
-- Classroom target: free plan with 1,000 requests/month.
+API đang dùng: [Twitter API45](https://rapidapi.com/alexanderxbx/api/twitter-api45).
 
-Setup:
-
-1. Sign in to RapidAPI.
-2. Open https://rapidapi.com/alexanderxbx/api/twitter-api45.
-3. Subscribe to the API plan.
-4. Copy RapidAPI key.
-5. Add to `starter_v0/.env`:
+1. Đăng nhập RapidAPI bằng tài khoản sở hữu key.
+2. Mở tab **Pricing**, chọn gói phù hợp và hoàn tất **Subscribe**. Kiểm tra quyền gọi cả `timeline.php` và `search.php`; không giả định tài khoản đã có subscription chỉ vì đã có API key. Giá/quota xem trực tiếp ở Pricing.
+3. Trong phần endpoint/code snippet, chọn đúng ứng dụng và copy `X-RapidAPI-Key` của ứng dụng đó vào `starter_v0/.env`. Key gắn với ứng dụng; xem [API Keys](https://docs.rapidapi.com/v2/docs/keys-and-key-rotation).
+4. Giữ host đúng:
 
 ```bash
 RAPIDAPI_KEY=...
 RAPIDAPI_TWITTER_HOST=twitter-api45.p.rapidapi.com
 ```
 
-Quick tests:
+5. Bấm **Test Endpoint** trên RapidAPI với `screenname=sama`; chỉ chạy eval sau khi endpoint hoạt động. Nếu vẫn 403 sau khi subscribe, đối chiếu tài khoản/ứng dụng, quyền của gói và code snippet; liên hệ API provider nếu quyền đã đúng.
+
+Chẩn đoán từ `starter_v0/` (tự đọc `.env`, mỗi lệnh chỉ gọi một request, không cần NVIDIA):
 
 ```bash
-python -c "from tools import TOOL_FUNCTIONS as T; print(T['timeline']('sama', limit=1)['items'][0]['title'])"
-python -c "from tools import TOOL_FUNCTIONS as T; print(T['social_search']('OpenAI', limit=1)['items'][0]['title'])"
+.venv/bin/python -c "from pathlib import Path; from env_loader import load_lab_env; load_lab_env(Path.cwd()); from tools import TOOL_FUNCTIONS as T; r=T['timeline']('sama', limit=1); print({'error':r.get('error'), 'items':len(r.get('items', [])), 'message':r.get('message')})"
+.venv/bin/python -c "from pathlib import Path; from env_loader import load_lab_env; load_lab_env(Path.cwd()); from tools import TOOL_FUNCTIONS as T; r=T['social_search']('AI', limit=1); print({'error':r.get('error'), 'items':len(r.get('items', [])), 'message':r.get('message')})"
+```
+
+Không chạy dồn các lệnh nếu tài khoản đang bị giới hạn. Các lệnh chỉ in lỗi, số item và thông báo; không in key. Kết quả có item và error=None cho biết tool đã lấy được dữ liệu.
+
+- `403 / You are not subscribed to this API.`: subscription chưa cấp quyền cho request hiện tại; retry không giải quyết được quyền truy cập.
+- `429 / Too many requests`: dừng request, xem **Subscriptions & Usage** và quota/rate limit. Chờ theo `Retry-After` nếu có; quota headers cho biết remaining/reset khi dịch vụ cung cấp. Không kết luận hết quota tháng chỉ từ thông báo này. Xem [Response Headers](https://docs.rapidapi.com/docs/response-headers) và [Subscription Plans](https://docs.rapidapi.com/v2/docs/api-pricing).
+
+Khi cả hai lệnh kiểm tra đều thành công, chạy lại:
+
+```bash
+.venv/bin/python run_eval.py --provider nvidia --version v3 --suite base --eval-cases data/eval_base.json
 ```
 
 ## 5. arXiv Bonus — `papers`, `paper_text`
@@ -214,10 +219,10 @@ python -c "from tools import TOOL_FUNCTIONS as T; print(T['send']('AI20k test me
 
 Before class, at least one person per group should have:
 
-- `OPENROUTER_API_KEY`
+- `NVIDIA_API_KEY`
 - `TAVILY_API_KEY`
 - `FIRECRAWL_API_KEY`
 - `RAPIDAPI_KEY`
 - optional `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`
 - optional `ARXIV_USER_AGENT`
-- `python scripts/preflight_provider.py --provider openrouter` passes
+- `python scripts/preflight_provider.py --provider nvidia` passes

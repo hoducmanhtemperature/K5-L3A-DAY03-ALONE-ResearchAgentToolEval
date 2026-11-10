@@ -1,3 +1,4 @@
+from providers.nvidia_provider import NvidiaProvider
 from providers.openai_provider import OpenAIProvider
 from providers.openrouter_provider import OpenRouterProvider
 from providers.anthropic_provider import AnthropicProvider
@@ -6,6 +7,8 @@ from providers.ollama_provider import OllamaProvider
 
 
 def make_provider(name: str):
+    if name == "nvidia":
+        return NvidiaProvider()
     if name == "openai":
         return OpenAIProvider()
     if name == "openrouter":

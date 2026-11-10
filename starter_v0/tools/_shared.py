@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import os
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,11 @@ TIMEOUT = 30
 
 
 def err(tool: str, exc: Exception) -> dict[str, Any]:
-    return {"tool": tool, "error": type(exc).__name__, "message": str(exc)}
+    message = str(exc)
+    for name, value in os.environ.items():
+        if value and any(marker in name for marker in ("KEY", "TOKEN", "SECRET")):
+            message = message.replace(value, "[redacted]")
+    return {"tool": tool, "error": type(exc).__name__, "message": message}
 
 
 def domain(url: str) -> str:
@@ -36,3 +41,12 @@ def terms(text: str) -> set[str]:
     folded = fold_text(text)
     return {term for term in re.findall(r"[a-z0-9]+", folded) if len(term) > 1 and term not in stopwords}
 
+
+
+def positive_int(value: Any, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise ValueError(f"{name} must be a positive integer")
+    number = int(value)
+    if number < 1:
+        raise ValueError(f"{name} must be a positive integer")
+    return number

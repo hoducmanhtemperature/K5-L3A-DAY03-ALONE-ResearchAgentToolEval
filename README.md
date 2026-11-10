@@ -1,4 +1,20 @@
-# Day 03 Lab v2 — Research Agent Tool Eval
+# K5-L3A-DAY03-ALONE-ResearchAgentToolEval
+
+## Bản hoàn thiện — Research Desk (NVIDIA)
+
+Chạy từ `starter_v0/` sau khi tạo môi trường và điền `.env`:
+
+```bash
+.venv/bin/python scripts/preflight_provider.py --provider nvidia
+.venv/bin/pytest -q
+.venv/bin/python -m streamlit run app.py --server.address=127.0.0.1
+```
+
+Mở **http://127.0.0.1:8501**. Mật khẩu demo được lưu ở `RESEARCH_UI_PASSWORD` trong `.env` trên máy; không đưa mật khẩu hay API key vào bài nộp. UI ghi transcript thật và có nút tải JSON.
+
+Provider mặc định của bản này là NVIDIA hosted API, model `nvidia/nemotron-3.5-super-vl-120b-a12b`, dùng OpenAI SDK ở endpoint `https://integrate.api.nvidia.com/v1`.
+
+Có 14 tool, gồm 4 tool bổ sung: `deduplicate`, `source_audit`, `compare_sources`, `extract_citations`. Prompt và tool declaration từng phiên bản nằm ở `artifacts/versions/v0` đến `v3`. Kết quả, giới hạn dịch vụ và hướng dẫn tái lập được ghi ở [REPORT](starter_v0/artifacts/REPORT.md).
 
 ## Brief
 
@@ -43,38 +59,38 @@ Bonus:
 Đánh dấu khi xong. Mỗi dòng trỏ tới file cần sửa và bằng chứng cần nộp.
 
 **Setup**
-- [ ] `.env` có provider key + `TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `RAPIDAPI_KEY`
-- [ ] `python scripts/preflight_provider.py --provider openrouter` pass
-- [ ] `pytest` chạy được: contract test + example test xanh, TODO test đang `skipped`
+- [x] `.env` có provider key + `TAVILY_API_KEY`, `FIRECRAWL_API_KEY`, `RAPIDAPI_KEY`
+- [x] `python scripts/preflight_provider.py --provider nvidia` pass
+- [x] `pytest` chạy được: contract, example và challenge test đều xanh; 131 passed, 0 skipped
 
 **Prompt & tool declaration**
-- [ ] Chạy baseline `v0`, ghi vào `artifacts/version_log.csv`
-- [ ] Liệt kê các case FAIL của `v0` và gán mỗi case một loại lỗi (`wrong_tool`, `wrong_arg_value`, `missing_info`...)
-- [ ] `artifacts/system_prompt.md`: bỏ các chỉ dẫn xấu cố ý của starter (đoán thay vì hỏi, gửi không cần xác nhận, ép một bước)
-- [ ] `artifacts/system_prompt.md`: thêm rule routing (khi nào `timeline` / `social_search` / `lookup` / `fetch` / `clarify`)
-- [ ] `artifacts/tools.yaml`: viết lại `description` mỗi tool: làm gì, **khi nào dùng / khi nào không dùng**
-- [ ] `artifacts/tools.yaml`: mô tả rõ convention args (handle không có `@`, `topic=news` cho tin tức, `timeframe`, `search_type=Top|Latest`)
-- [ ] `artifacts/tools.yaml`: `send` mô tả rõ chỉ gửi khi user đã xác nhận (`confirmed=true`)
-- [ ] `v1`, `v2`, `v3`: mỗi version **một** giả thuyết, metric trước/sau trong `version_log.csv`
+- [x] Chạy baseline `v0`, ghi vào `artifacts/version_log.csv`
+- [x] Liệt kê các case FAIL của `v0` và gán mỗi case một loại lỗi (`wrong_tool`, `wrong_arg_value`, `missing_info`...)
+- [x] `artifacts/system_prompt.md`: bỏ các chỉ dẫn xấu cố ý của starter (đoán thay vì hỏi, gửi không cần xác nhận, ép một bước)
+- [x] `artifacts/system_prompt.md`: thêm rule routing (khi nào `timeline` / `social_search` / `lookup` / `fetch` / `clarify`)
+- [x] `artifacts/tools.yaml`: viết lại `description` mỗi tool: làm gì, **khi nào dùng / khi nào không dùng**
+- [x] `artifacts/tools.yaml`: mô tả rõ convention args (handle không có `@`, `topic=news` cho tin tức, `timeframe`, `search_type=Top|Latest`)
+- [x] `artifacts/tools.yaml`: `send` mô tả rõ chỉ gửi khi user đã xác nhận (`confirmed=true`)
+- [x] `v1`, `v2`, `v3`: mỗi version **một** giả thuyết, metric trước/sau trong `version_log.csv`
 
 **Tool mới**
-- [ ] `tools/<tên>/tool.py` + `TOOL.md` (frontmatter đúng contract trong `tools/README.md`)
-- [ ] Đăng ký trong `tools/__init__.py` (`TOOL_FUNCTIONS`) và `artifacts/tools.yaml`
-- [ ] Unit test cho tool mới trong `tests/test_tools_todo.py` (≥ 3 test)
-- [ ] Ít nhất 1 eval case trong `data/eval_group.json` kiểm tra model có route tới tool mới đúng lúc
+- [x] `tools/<tên>/tool.py` + `TOOL.md` (frontmatter đúng contract trong `tools/README.md`)
+- [x] Đăng ký trong `tools/__init__.py` (`TOOL_FUNCTIONS`) và `artifacts/tools.yaml`
+- [x] Unit test cho tool mới trong `tests/test_tools_todo.py` (≥ 3 test)
+- [x] Ít nhất 1 eval case trong `data/eval_group.json` kiểm tra model có route tới tool mới đúng lúc
 
 **Testing**
-- [ ] `data/eval_group.json`: case cho model (routing / args / boundary), xem Step 4
-- [ ] `tests/test_tools_todo.py`: unit test cho code của tool, xem Step 4b
-- [ ] `pytest`: 0 failed, 0 skipped
+- [x] `data/eval_group.json`: case cho model (routing / args / boundary), xem Step 4
+- [x] `tests/test_tools_todo.py`: unit test cho code của tool, xem Step 4b
+- [x] `pytest`: 0 failed, 0 skipped
 
 **Demo & report**
-- [ ] UI chạy được + link dùng thử
-- [ ] `chat.py`: ≥ 3 lượt live, có transcript
-- [ ] `artifacts/REPORT.md` Phần A trước 16:30, Phần B trước khi nộp
+- [x] UI Streamlit và link dùng thử tại máy chạy ứng dụng hoạt động
+- [x] `chat.py`: ≥ 3 lượt live, có transcript
+- [x] `artifacts/REPORT.md` Phần A và Phần B hoàn chỉnh, có liên kết bằng chứng
 
 **Bonus (tuỳ chọn)**
-- [ ] `send` có xác nhận trước khi gửi, có transcript chứng minh
+- [x] `send` có xác nhận trước khi gửi, có transcript chứng minh
 - [ ] Small Local Model Challenge (Step 7)
 
 ## Folder Map
@@ -83,6 +99,7 @@ Bonus:
 starter_v0/
   agent.py                    # one-shot model -> tool calls -> tool execution
   chat.py                     # interactive chat, multi-round tools, transcript JSON
+  app.py                      # Streamlit UI
   run_eval.py                 # eval routing + args, writes runs/*.json
   versioning.py               # prompt/tool hash
   pytest.ini
@@ -90,7 +107,7 @@ starter_v0/
     conftest.py               # offline fixtures: block real network, fake_http, clean env
     test_tool_contract.py     # tools.yaml <-> code <-> eval stay in sync (given, keep green)
     test_tools_examples.py    # worked examples to copy
-    test_tools_todo.py        # TODO(student): tool unit test challenge
+    test_tools_todo.py        # tool unit tests and regressions
   artifacts/
     system_prompt.md          # student edits
     tools.yaml                # student edits
@@ -108,7 +125,6 @@ starter_v0/
   company_policy/             # local markdown KB for bonus policy tool
   providers/                  # OpenRouter/OpenAI/Anthropic/Gemini/Ollama (local) adapters
   scripts/preflight_provider.py
-  samples/                    # mock format examples (transcript, run-analysis, version_log)
 ```
 
 ## Tool Tracks
@@ -158,7 +174,7 @@ cp .env.example .env
 Fill `.env`. Minimum recommended:
 
 ```bash
-OPENROUTER_API_KEY=...
+NVIDIA_API_KEY=...
 TAVILY_API_KEY=...
 FIRECRAWL_API_KEY=...
 RAPIDAPI_KEY=...
@@ -170,7 +186,7 @@ Tool setup details are in [TOOL-SETUP.md](TOOL-SETUP.md).
 Preflight:
 
 ```bash
-python scripts/preflight_provider.py --provider openrouter
+python scripts/preflight_provider.py --provider nvidia
 ```
 
 If preflight fails, fix provider key, dependency, or network before running eval.
@@ -181,7 +197,7 @@ Run the fixed base eval as `v0`:
 
 ```bash
 python run_eval.py \
-  --provider openrouter \
+  --provider nvidia \
   --version v0 \
   --suite base \
   --eval-cases data/eval_base.json
@@ -227,9 +243,9 @@ Method, not memorized answers:
 Run at least three improved versions:
 
 ```bash
-python run_eval.py --provider openrouter --version v1 --suite base --eval-cases data/eval_base.json
-python run_eval.py --provider openrouter --version v2 --suite base --eval-cases data/eval_base.json
-python run_eval.py --provider openrouter --version v3 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider nvidia --version v1 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider nvidia --version v2 --suite base --eval-cases data/eval_base.json
+python run_eval.py --provider nvidia --version v3 --suite base --eval-cases data/eval_base.json
 ```
 
 After each run, fill `artifacts/version_log.csv`:
@@ -257,7 +273,7 @@ Run:
 
 ```bash
 python run_eval.py \
-  --provider openrouter \
+  --provider nvidia \
   --version v3 \
   --suite group \
   --eval-cases data/eval_group.json
@@ -267,7 +283,7 @@ Optional extension eval:
 
 ```bash
 python run_eval.py \
-  --provider openrouter \
+  --provider nvidia \
   --version v3 \
   --suite extension \
   --eval-cases data/eval_research_extension.json
@@ -301,7 +317,7 @@ Nguyên tắc: một test kiểm tra một hành vi, tên test mô tả hành vi
 `chat.py` is for live multi-round interaction. It logs every turn to `transcripts/*.transcript.json`.
 
 ```bash
-python chat.py --provider openrouter --version v3
+python chat.py --provider nvidia --version v3
 ```
 
 Try at least 3 live turns, for example:

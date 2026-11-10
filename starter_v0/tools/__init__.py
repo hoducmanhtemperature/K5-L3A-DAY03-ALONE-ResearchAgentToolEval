@@ -5,8 +5,6 @@ from typing import Any
 
 import yaml
 
-# Folder names are intentionally vague to match the tool names students see.
-# The imported function names are the underlying implementations (unchanged).
 from .clarify.tool import ask_user
 from .papers.tool import arxiv_search
 from .paper_text.tool import get_arxiv_paper_text
@@ -17,14 +15,16 @@ from .policy.tool import search_company_policy
 from .social_search.tool import search_tweets
 from .send.tool import send_telegram
 from .lookup.tool import web_search
+from .deduplicate.tool import deduplicate
+from .source_audit.tool import source_audit
+from .compare_sources.tool import compare_sources
+from .extract_citations.tool import extract_citations
 
-
-# NOTE (starter_v0): tool names here are intentionally vague. These keys are the
-# names the model sees AND the names data/eval_base.json + data/eval_research_extension.json
-# match against. If a team renames a tool, it MUST stay in sync across ALL of:
-#   artifacts/tools.yaml  ->  this dict  ->  data/eval_base.json + data/eval_research_extension.json
-# Otherwise the eval raises "not declared in tools.yaml" or scores every call as a name mismatch.
 TOOL_FUNCTIONS = {
+    "deduplicate": deduplicate,
+    "source_audit": source_audit,
+    "compare_sources": compare_sources,
+    "extract_citations": extract_citations,
     "clarify": ask_user,
     "timeline": get_user_tweets,
     "social_search": search_tweets,
@@ -35,8 +35,6 @@ TOOL_FUNCTIONS = {
     "policy": search_company_policy,
     "papers": arxiv_search,
     "paper_text": get_arxiv_paper_text,
-    # TODO(student): register your new tool here, e.g. "my_tool": my_tool_function,
-    # then declare it in artifacts/tools.yaml and run `pytest tests/test_tool_contract.py`.
 }
 
 

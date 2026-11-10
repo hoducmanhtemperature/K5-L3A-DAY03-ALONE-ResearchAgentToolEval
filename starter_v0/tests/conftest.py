@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 API_ENV_VARS = [
+    "NVIDIA_API_KEY", "NVIDIA_MODEL",
     "TAVILY_API_KEY", "FIRECRAWL_API_KEY", "RAPIDAPI_KEY", "RAPIDAPI_TWITTER_HOST",
     "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID",
 ]
