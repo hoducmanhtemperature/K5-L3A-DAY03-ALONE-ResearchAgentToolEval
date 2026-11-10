@@ -1,6 +1,11 @@
 # K5-L3A-DAY03-ALONE-ResearchAgentToolEval
+**Name: Ho Duc Manh (leader)**
+**Group: Alone**
+**MSV: 2A202603609**
 
-## Bản hoàn thiện — Research Desk (NVIDIA)
+
+
+## Bản hoàn thiện — Research Desk 
 
 Chạy từ `starter_v0/` sau khi tạo môi trường và điền `.env`:
 
